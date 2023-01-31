@@ -21,19 +21,21 @@ namespace LockExample
         public static async Task CopyFileAsync(string source, string destination)
         {
             var fileEntries = Directory.GetFiles(source);
-            var tasks = new List<Task>();
+            var tasks = new List<Task<TimeSpan>>();
             foreach (var item in fileEntries)
             {
                 var task = Task.Run(() => CopyToDestination(source, destination, item));
                 tasks.Add(task);
             }
-            await Task.WhenAll(tasks).ConfigureAwait(true);
-            //foreach (Task item in tasks)
-            //{
-            //    Console.WriteLine(item.Status);
-            //}
+            _ = await Task.WhenAll(tasks).ConfigureAwait(true);
+            TimeSpan time;
+            foreach (Task<TimeSpan> item in tasks)
+            {
+                time = item.GetAwaiter().GetResult();
+                Console.WriteLine($"Result time: {Math.Round(time.TotalSeconds * 1000, 2)}");
+            }
         }
-        public static void CopyToDestination(string source, string destination, string namefile)
+        public static Task<TimeSpan> CopyToDestination(string source, string destination, string namefile)
         {
             var stopWatch = new Stopwatch();
             var currentFileName = Path.GetFileName(namefile);
@@ -41,7 +43,8 @@ namespace LockExample
             File.Copy(Path.Combine(source, currentFileName), Path.Combine(destination, currentFileName), true);
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
-            Console.WriteLine($"File {currentFileName} nRunTime {Math.Round(ts.TotalSeconds * 1000, 2)}");
+            Console.WriteLine($"File {currentFileName} RunTime {Math.Round(ts.TotalSeconds * 1000, 2)}");
+            return Task.FromResult(ts);
         }
     }
 }
