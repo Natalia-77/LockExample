@@ -2,9 +2,10 @@
 {
     internal sealed class Program
     {
-        private static void Main()
+        private static async Task Main()
         {
-            FileService.StartFileCopy();
+            await FileService.StartFileCopy().ConfigureAwait(false);
+
         }
     }
 }

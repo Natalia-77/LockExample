@@ -1,14 +1,13 @@
 ﻿using System.Diagnostics;
-
 namespace LockExample
 {
     internal static class FileService
     {
         private const string FolderName = "LockStatementApp";
         private const string Destination = "Destination";
-        private static readonly object fileLock = new();
+        // private static readonly object fileLock = new();
 
-        public static void StartFileCopy()
+        public static async Task StartFileCopy()
         {
             var dirApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var destinationPath = Path.Combine(dirApp, Destination);
@@ -17,36 +16,32 @@ namespace LockExample
             {
                 _ = Directory.CreateDirectory(destinationPath);
             }
-            _ = CopyFileAsync(sourcePath, destinationPath);
+            await CopyFileAsync(sourcePath, destinationPath).ConfigureAwait(false);
         }
         public static async Task CopyFileAsync(string source, string destination)
         {
-            var stopWatch = new Stopwatch();
             var fileEntries = Directory.GetFiles(source);
-            var len = fileEntries.Length;
-            var tasks = new Task[len];
-            for (var i = 0; i < len; i++)
+            var tasks = new List<Task>();
+            foreach (var item in fileEntries)
             {
-                lock (fileLock)
-                {
-                    stopWatch.Start();
-                    Console.WriteLine(Path.GetFileName(fileEntries[i]));
-                    tasks[i] = Task.Run(() => CopyToDestination(source, destination, fileEntries[i]));
-                    stopWatch.Stop();
-                    TimeSpan ts = stopWatch.Elapsed;
-                    Console.WriteLine($"RunTime {ts.TotalSeconds * 1000}");
-                }
-                Thread.Sleep(2000);
-
+                var task = Task.Run(() => CopyToDestination(source, destination, item));
+                tasks.Add(task);
             }
-            await Task.WhenAll(tasks).ConfigureAwait(false);
+            await Task.WhenAll(tasks).ConfigureAwait(true);
+            //foreach (Task item in tasks)
+            //{
+            //    Console.WriteLine(item.Status);
+            //}
         }
-
         public static void CopyToDestination(string source, string destination, string namefile)
         {
+            var stopWatch = new Stopwatch();
             var currentFileName = Path.GetFileName(namefile);
+            stopWatch.Start();
             File.Copy(Path.Combine(source, currentFileName), Path.Combine(destination, currentFileName), true);
-
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+            Console.WriteLine($"File {currentFileName} nRunTime {Math.Round(ts.TotalSeconds * 1000, 2)}");
         }
     }
 }
