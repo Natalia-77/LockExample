@@ -5,7 +5,6 @@
         private static async Task Main()
         {
             await FileService.StartFileCopy().ConfigureAwait(false);
-
         }
     }
 }
