@@ -27,7 +27,7 @@ namespace LockExample
             _ = await Task.WhenAll(tasks).ConfigureAwait(true);
             foreach (Task<ResultInfo> item in tasks)
             {
-                ResultInfo resultItem = item.GetAwaiter().GetResult();
+                ResultInfo resultItem = await item.ConfigureAwait(false);
                 var writeresult = new WriteResult();
                 await writeresult.Write(resultItem).ConfigureAwait(false);
             }
