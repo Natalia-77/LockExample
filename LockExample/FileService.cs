@@ -1,21 +1,26 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using LockExample.Utils;
-
+[assembly: InternalsVisibleTo("LockExample.UnitTests")]
 namespace LockExample
 {
-    internal static class FileService
+    internal sealed class FileService
     {
-        private const string FolderName = "LockStatementApp";
-        private const string Destination = "Destination";
-        public static async Task StartFileCopy()
+        //private const string FolderName = "LockStatementApp";
+        //private const string Destination = "Destination";
+        private readonly string _sourcePath;
+        public FileService(string? sourcePath = null)
         {
-            var dirApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var destinationPath = Path.Combine(dirApp, Destination);
-            var sourcePath = Path.Combine(dirApp, FolderName);
-            DirectoryUtil.EnsureDirectory(destinationPath);
-            await CopyFileAsync(sourcePath, destinationPath).ConfigureAwait(false);
+            _sourcePath = sourcePath ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
-        public static async Task CopyFileAsync(string source, string destination)
+        public async Task StartFileCopy(string destinationFilePath, string destinationFolderName, string sourceFolderName)
+        {
+            var destinationPath = Path.Combine(destinationFilePath, destinationFolderName);
+            var source = Path.Combine(_sourcePath, sourceFolderName);
+            DirectoryUtil.EnsureDirectory(destinationPath);
+            await CopyFileAsync(source, destinationPath).ConfigureAwait(false);
+        }
+        public async Task CopyFileAsync(string source, string destination)
         {
             var fileEntries = Directory.GetFiles(source);
             var tasks = new List<Task<ResultInfo>>();
@@ -23,14 +28,11 @@ namespace LockExample
             {
                 var task = Task.Run(() => CopyToDestination(source, destination, item));
                 tasks.Add(task);
-            }
-            _ = await Task.WhenAll(tasks).ConfigureAwait(true);
-            foreach (Task<ResultInfo> item in tasks)
-            {
-                ResultInfo resultItem = await item.ConfigureAwait(false);
-                var writeresult = new WriteResult();
+                ResultInfo resultItem = await task.ConfigureAwait(false);
+                var writeresult = new WriteResult(_sourcePath);
                 await writeresult.Write(resultItem).ConfigureAwait(false);
             }
+            _ = await Task.WhenAll(tasks).ConfigureAwait(true);
         }
         public static Task<ResultInfo> CopyToDestination(string source, string destination, string namefile)
         {
