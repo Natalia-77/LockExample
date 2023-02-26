@@ -8,17 +8,35 @@ namespace LockExample
         private readonly string _resultFilePath;
         public WriteResult(string cacheFilePath)
         {
-            _resultFilePath = cacheFilePath;
+            _resultFilePath = Path.Combine(cacheFilePath, ResultFolder, ResultFile);
         }
-        public async Task Write(ResultInfo result)
+        public void Write(ResultInfo result)
         {
-            var pathToWrite = Path.Combine(_resultFilePath, ResultFolder, ResultFile);
-            var dir = Path.GetDirectoryName(pathToWrite) ?? throw new ArgumentException("Error get directory");
+            var dir = Path.GetDirectoryName(_resultFilePath) ?? throw new ArgumentException("Error get directory");
             DirectoryUtil.EnsureDirectory(dir);
-            using StreamWriter sw = File.AppendText(pathToWrite);
-            await sw.WriteLineAsync($"{result.SourceFileName} copy {result.DateCopeFile.ToShortDateString()}" +
-                $" into {result.DestinationFileName} with size {result.FileSize} total time :" +
-                $" {Math.Round(result.TimeToCopy.TotalSeconds * 1000, 2)}").ConfigureAwait(false);
+            var textToFile = $"{result.SourceFileName},{result.DateCopeFile},{result.DestinationFileName},{result.FileSize},{Math.Round(result.TimeToCopy.TotalSeconds * 1000, 2)}";
+            if (File.Exists(_resultFilePath))
+            {
+                using StreamWriter sw = File.AppendText(_resultFilePath);
+                sw.WriteLine(textToFile);
+            }
+            else
+            {
+                _ = File.WriteAllTextAsync(_resultFilePath, textToFile);
+            }
+        }
+        public bool isNotEmptyReadFile()
+        {
+            if (!File.Exists(_resultFilePath))
+            {
+                return false;
+            }
+            var lines = File.ReadAllLines(_resultFilePath);
+            return lines.Any();
+        }
+        public void ClearTextFile()
+        {
+            File.WriteAllText(_resultFilePath, string.Empty);
         }
     }
 }
