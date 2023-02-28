@@ -46,17 +46,19 @@ namespace LockExample
             var sourcePath = Path.Combine(sourcePathFolder, currentFileName);
             var destinationPath = Path.Combine(destinationPathFolder, currentFileName);
             var directoryName = Path.GetDirectoryName(sourcePathFolder) ?? throw new ArgumentException("Error get directory");
+            //lock (_lock)
+            //{
+            stopWatch.Start();
+            File.Copy(sourcePath, destinationPath, true);
+            stopWatch.Stop();
+            TimeSpan timeCopyFile = stopWatch.Elapsed;
             lock (_lock)
             {
-                stopWatch.Start();
-                File.Copy(sourcePath, destinationPath, true);
-                stopWatch.Stop();
-                TimeSpan timeCopyFile = stopWatch.Elapsed;
                 ResultInfo fileInfo = FileResultCopyInfo.GetResultInfo(sourcePathFolder, currentFileName, timeCopyFile);
                 var writeresult = new WriteResult(directoryName);
                 writeresult.Write(fileInfo);
             }
-            return Task.CompletedTask;
+            return Task.FromResult(0);
         }
     }
 }

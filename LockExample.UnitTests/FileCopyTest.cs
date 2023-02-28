@@ -75,12 +75,10 @@ namespace LockExample.UnitTests
             var differenceQuery = listInfo.Except(filesSource);
             //Assert
             Assert.Empty(differenceQuery);            
-        }       
-
-        public List<ResultFileInfo> GetResultFileInfos(string pathFileToRead)
+        } 
+        private static List<ResultInfo> GetResultFileInfos(string pathFileToRead)
         {
-            var listOfFileItems = new List<ResultFileInfo>();
-
+            var listOfFileItems = new List<ResultInfo>();
             using StreamReader reader = new(pathFileToRead);
             string? line;
             int counter = 0;
@@ -88,10 +86,10 @@ namespace LockExample.UnitTests
             {
                 string[] itemsInFile = line.Split(",");
                 counter++;
-                listOfFileItems.Add(new ResultFileInfo()
+                listOfFileItems.Add(new ResultInfo()
                 {
                     SourceFileName = itemsInFile[0],
-                    DateCopyFile = itemsInFile[1],
+                    DateCopeFile = DateTime.Parse(itemsInFile[1]),
                     DestinationFileName = itemsInFile[2],
                     FileSize = itemsInFile[3],
                     TimeToCopy = TimeSpan.Parse(itemsInFile[4])

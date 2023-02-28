@@ -1,6 +1,6 @@
 ﻿namespace LockExample
 {
-    internal sealed class ResultInfo
+    internal class ResultInfo
     {
         public string? SourceFileName { get; init; }
         public string? DestinationFileName { get; init; }

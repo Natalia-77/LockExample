@@ -10,7 +10,7 @@ namespace LockExample
         {
             _resultFilePath = Path.Combine(cacheFilePath, ResultFolder, ResultFile);
         }
-        public void Write(ResultInfo result)
+        public async void Write(ResultInfo result)
         {
             var dir = Path.GetDirectoryName(_resultFilePath) ?? throw new ArgumentException("Error get directory");
             DirectoryUtil.EnsureDirectory(dir);
@@ -18,11 +18,11 @@ namespace LockExample
             if (File.Exists(_resultFilePath))
             {
                 using StreamWriter sw = File.AppendText(_resultFilePath);
-                sw.WriteLine(textToFile);
+                await sw.WriteLineAsync(textToFile).ConfigureAwait(false);
             }
             else
             {
-                _ = File.WriteAllTextAsync(_resultFilePath, textToFile);
+                await File.WriteAllTextAsync(_resultFilePath, textToFile).ConfigureAwait(false);
             }
         }
         public bool isNotEmptyReadFile()
